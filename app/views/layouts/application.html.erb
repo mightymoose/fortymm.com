@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html class="h-full bg-white">
+<html class="h-full bg-gray-100">
   <head>
     <title><%= content_for(:title) || "Fortymm Com" %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -26,8 +26,29 @@
   <body class="h-full">
     <p class="notice"><%= notice %></p>
     <p class="alert"><%= alert %></p>
+    <nav class="bg-gray-800">
+      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="flex h-16 items-center justify-between">
+          <div class="flex items-center">
+            <!-- Nav Items -->
+          </div>
+          <div class="hidden md:block">
+            <div class="ml-4 flex items-center md:ml-6">
+              <!-- Notification bell -->
+              <!-- Profile dropdown -->
+            </div>
+          </div>
+          <div class="-mr-2 flex md:hidden">
+            <!-- Mobile menu button -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Mobile menu, show/hide based on menu state. -->
+    </nav>
 
     <main>
+
       <%= yield %>
     </main>
   </body>
