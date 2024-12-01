@@ -34,6 +34,10 @@ export default class extends Controller {
   }
 
   closeMenu() {
+    if (!this.open) {
+      return;
+    }
+
     this.open = false;
 
     this.menuTarget.addEventListener('transitionend', () => {
@@ -47,7 +51,6 @@ export default class extends Controller {
       this.menuTarget.classList.remove(...leavingAnimation.from);
       this.menuTarget.classList.add(...leavingAnimation.to);
     });
-
   }
 
   toggle() {
