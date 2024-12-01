@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  get "matches/show"
   devise_for :users
   get "dashboard/index"
   get "landing_page/index"
@@ -16,4 +17,6 @@ Rails.application.routes.draw do
   root "landing_page#index"
 
   get "dashboard" => "dashboard#index"
+
+  resources :matches, only: [ :show ]
 end
