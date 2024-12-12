@@ -19,9 +19,6 @@ defmodule FortymmWeb.Router do
 
   scope "/", FortymmWeb do
     pipe_through :browser
-
-    get "/", PageController, :home
-    live "/dashboard", DashboardLive.Index
   end
 
   # Other scopes may use custom stacks.
@@ -51,6 +48,8 @@ defmodule FortymmWeb.Router do
   scope "/", FortymmWeb do
     pipe_through [:browser, :redirect_if_user_is_authenticated]
 
+    get "/", PageController, :home
+
     live_session :redirect_if_user_is_authenticated,
       on_mount: [{FortymmWeb.UserAuth, :redirect_if_user_is_authenticated}] do
       live "/users/register", UserRegistrationLive, :new
@@ -69,6 +68,7 @@ defmodule FortymmWeb.Router do
       on_mount: [{FortymmWeb.UserAuth, :ensure_authenticated}] do
       live "/users/settings", UserSettingsLive, :edit
       live "/users/settings/confirm_email/:token", UserSettingsLive, :confirm_email
+      live "/dashboard", DashboardLive.Index
     end
   end
 
