@@ -17,6 +17,10 @@ defmodule Fortymm.Matches do
 
   def get_challenge!(id), do: Repo.get!(Challenge, id)
 
+  def change_challenge(%Challenge{} = challenge, attrs \\ %{}) do
+    Challenge.changeset(challenge, attrs)
+  end
+
   @doc """
   Returns the list of matches.
 

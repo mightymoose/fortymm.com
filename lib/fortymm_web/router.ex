@@ -66,6 +66,8 @@ defmodule FortymmWeb.Router do
   scope "/", FortymmWeb do
     pipe_through [:browser, :require_authenticated_user]
 
+    post "/challenges", ChallengesController, :create
+
     live_session :require_authenticated_user,
       on_mount: [{FortymmWeb.UserAuth, :ensure_authenticated}] do
       live "/users/settings", UserSettingsLive, :edit
