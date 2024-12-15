@@ -71,6 +71,7 @@ defmodule FortymmWeb.Router do
       live "/users/settings", UserSettingsLive, :edit
       live "/users/settings/confirm_email/:token", UserSettingsLive, :confirm_email
       live "/dashboard", DashboardLive.Index
+      live "/challenges/:id", ChallengesLive.Show, :show
     end
   end
 
