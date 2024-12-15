@@ -7,6 +7,15 @@ defmodule Fortymm.Matches do
   alias Fortymm.Repo
 
   alias Fortymm.Matches.Match
+  alias Fortymm.Matches.Challenge
+
+  def create_challenge(attrs \\ %{}) do
+    %Challenge{}
+    |> Challenge.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  def get_challenge!(id), do: Repo.get!(Challenge, id)
 
   @doc """
   Returns the list of matches.
