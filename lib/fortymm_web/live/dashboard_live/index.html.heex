@@ -1,1 +1,24 @@
 <h1>Dashboard</h1>
+
+<div class="grid grid-cols-7">
+  <!-- Be sure to use this with a layout container that is full-width on mobile -->
+  <div class="overflow-hidden bg-white shadow sm:rounded-lg col-span-3">
+    <div class="px-4 pt-4 sm:px-6 text-center">
+      <h3 class="text-base font-semibold text-gray-900">Challenge a friend</h3>
+    </div>
+    <div class="px-4 py-5 sm:p-6 flex flex-col">
+      <%= for new_match_form <- @new_match_forms do %>
+        <.form :let={f} for={new_match_form} class="flex flex-col" action={~p"/challenges"}>
+          <input
+            type="hidden"
+            name={f[:maximum_number_of_games].name}
+            value={f[:maximum_number_of_games].value}
+          />
+          <.button type="submit" class="grow">
+            {match_length_description(new_match_form[:maximum_number_of_games].value)}
+          </.button>
+        </.form>
+      <% end %>
+    </div>
+  </div>
+</div>

@@ -3,6 +3,35 @@ defmodule Fortymm.MatchesTest do
 
   alias Fortymm.Matches
 
+  describe "challenges" do
+    alias Fortymm.Matches.Challenge
+
+    import Fortymm.MatchesFixtures
+
+    @invalid_attrs %{maximum_number_of_games: nil, match_id: nil}
+
+    test "get_challenge!/1 returns the challenge with given id" do
+      challenge = challenge_fixture()
+      assert Matches.get_challenge!(challenge.id) == challenge
+    end
+
+    test "create_challenge/1 with valid data creates a challenge" do
+      valid_attrs = valid_challenge_attributes()
+      assert {:ok, %Challenge{} = challenge} = Matches.create_challenge(valid_attrs)
+      assert challenge.match_id == valid_attrs.match_id
+      assert challenge.maximum_number_of_games == valid_attrs.maximum_number_of_games
+    end
+
+    test "create_challenge/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} = Matches.create_challenge(@invalid_attrs)
+    end
+
+    test "change_challenge/1 returns a challenge changeset" do
+      challenge = challenge_fixture()
+      assert %Ecto.Changeset{} = Matches.change_challenge(challenge)
+    end
+  end
+
   describe "matches" do
     alias Fortymm.Matches.Match
 

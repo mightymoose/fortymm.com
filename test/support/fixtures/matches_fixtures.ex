@@ -7,7 +7,8 @@ defmodule Fortymm.MatchesFixtures do
   def valid_challenge_attributes(attrs \\ %{}) do
     attrs
     |> Enum.into(%{
-      maximum_number_of_games: Enum.random(Fortymm.Matches.Match.valid_match_lengths())
+      maximum_number_of_games: Enum.random(Fortymm.Matches.Match.valid_match_lengths()),
+      match_id: nil
     })
   end
 
