@@ -4,6 +4,28 @@ defmodule Fortymm.MatchesFixtures do
   entities via the `Fortymm.Matches` context.
   """
 
+  alias Fortymm.AccountsFixtures
+
+  def valid_match_participant_attributes(attrs \\ %{}) do
+    match = match_fixture()
+    user = AccountsFixtures.user_fixture()
+
+    attrs
+    |> Enum.into(%{
+      user_id: user.id,
+      match_id: match.id
+    })
+  end
+
+  def match_participant_fixture(attrs \\ %{}) do
+    {:ok, match_participant} =
+      attrs
+      |> valid_match_participant_attributes()
+      |> Fortymm.Matches.create_match_participant()
+
+    match_participant
+  end
+
   def valid_challenge_attributes(attrs \\ %{}) do
     attrs
     |> Enum.into(%{

@@ -10,6 +10,9 @@ defmodule Fortymm.Matches.Match do
     field :status, Ecto.Enum, values: [:pending, :in_progress, :completed, :cancelled, :abandoned]
     field :maximum_number_of_games, :integer
 
+    has_many :match_participants, Fortymm.Matches.MatchParticipant
+    has_many :users, through: [:match_participants, :user]
+
     timestamps(type: :utc_datetime)
   end
 

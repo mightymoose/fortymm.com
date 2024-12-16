@@ -3,6 +3,28 @@ defmodule Fortymm.MatchesTest do
 
   alias Fortymm.Matches
 
+  describe "match_participants" do
+    import Fortymm.MatchesFixtures
+
+    alias Fortymm.Matches.MatchParticipant
+
+    @invalid_attrs %{user_id: nil, match_id: nil}
+
+    test "create_match_participant/1 with valid data creates a match participant" do
+      valid_attrs = valid_match_participant_attributes()
+
+      assert {:ok, %MatchParticipant{} = match_participant} =
+               Matches.create_match_participant(valid_attrs)
+
+      assert match_participant.user_id == valid_attrs.user_id
+      assert match_participant.match_id == valid_attrs.match_id
+    end
+
+    test "create_match_participant/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} = Matches.create_match_participant(@invalid_attrs)
+    end
+  end
+
   describe "challenges" do
     alias Fortymm.Matches.Challenge
 
