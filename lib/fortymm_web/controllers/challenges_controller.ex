@@ -4,6 +4,12 @@ defmodule FortymmWeb.ChallengesController do
   alias Fortymm.Matches
 
   def create(conn, %{"challenge" => challenge_params}) do
+    current_user = conn.assigns.current_user
+
+    challenge_params =
+      challenge_params
+      |> Map.put("created_by_id", current_user.id)
+
     case Matches.create_challenge(challenge_params) do
       {:ok, challenge} ->
         conn

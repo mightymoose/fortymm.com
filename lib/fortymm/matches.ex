@@ -24,8 +24,6 @@ defmodule Fortymm.Matches do
 
   def get_challenge!(id), do: Repo.get!(Challenge, id)
 
-  @spec change_challenge(%Fortymm.Matches.Challenge{optional(atom()) => any()}) ::
-          Ecto.Changeset.t()
   def change_challenge(%Challenge{} = challenge, attrs \\ %{}) do
     Challenge.changeset(challenge, attrs)
   end

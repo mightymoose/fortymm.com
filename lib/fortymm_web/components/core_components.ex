@@ -19,6 +19,21 @@ defmodule FortymmWeb.CoreComponents do
   alias Phoenix.LiveView.JS
   import FortymmWeb.Gettext
 
+  def qr_code(assigns) do
+    {:ok, qr_code} =
+      assigns.text
+      |> QRCode.create(:high)
+      |> QRCode.render(:svg)
+
+    assigns = assign(assigns, qr_code: qr_code)
+
+    ~H"""
+    <div>
+      {Phoenix.HTML.raw(@qr_code)}
+    </div>
+    """
+  end
+
   @doc """
   Renders a modal.
 

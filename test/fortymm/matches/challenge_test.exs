@@ -21,6 +21,22 @@ defmodule Fortymm.Matches.ChallengeTest do
     refute changeset.valid?
   end
 
+  test "is invalid without a creator" do
+    changeset =
+      Challenge.changeset(%Challenge{}, valid_challenge_attributes(%{created_by_id: nil}))
+
+    refute changeset.valid?
+  end
+
+  test "is invalid with an invalid creator" do
+    assert {:error, changeset} =
+             %Challenge{}
+             |> Challenge.changeset(valid_challenge_attributes(%{created_by_id: 0}))
+             |> Repo.insert()
+
+    assert errors_on(changeset) == %{created_by_id: ["does not exist"]}
+  end
+
   test "is valid without a match" do
     changeset = Challenge.changeset(%Challenge{}, valid_challenge_attributes(%{match_id: 10}))
     assert changeset.valid?
