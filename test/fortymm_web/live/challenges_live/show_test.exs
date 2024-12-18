@@ -7,16 +7,37 @@ defmodule FortymmWeb.ChallengesLive.ShowTest do
 
   describe "GET /challenges/:id" do
     setup do
-      %{challenge: challenge_fixture()}
+      user = user_fixture()
+      challenge = challenge_fixture(%{created_by_id: user.id})
+      %{challenge: challenge, user: user}
     end
 
-    test "renders challenge when a user is logged in", %{conn: conn, challenge: challenge} do
+    test "renders the challenge when the creator is logged in", %{
+      conn: conn,
+      challenge: challenge,
+      user: user
+    } do
       {:ok, _lv, html} =
         conn
-        |> log_in_user(user_fixture())
+        |> log_in_user(user)
         |> live(~p"/challenges/#{challenge.id}")
 
-      assert html =~ "#{challenge.maximum_number_of_games}"
+      assert html =~ "To invite someone to play, give this URL"
+    end
+
+    test "renders the opponent view when the opponent is logged in", %{
+      conn: conn,
+      challenge: challenge,
+      user: user
+    } do
+      opponent = user_fixture()
+
+      {:ok, _lv, html} =
+        conn
+        |> log_in_user(opponent)
+        |> live(~p"/challenges/#{challenge.id}")
+
+      assert html =~ "#{user.username} has invited you to play"
     end
 
     test "redirects to login page when a user is not logged in", %{

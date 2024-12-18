@@ -27,9 +27,12 @@ defmodule Fortymm.MatchesFixtures do
   end
 
   def valid_challenge_attributes(attrs \\ %{}) do
+    user = AccountsFixtures.user_fixture()
+
     attrs
     |> Enum.into(%{
       maximum_number_of_games: Enum.random(Fortymm.Matches.Match.valid_match_lengths()),
+      created_by_id: user.id,
       match_id: nil
     })
   end

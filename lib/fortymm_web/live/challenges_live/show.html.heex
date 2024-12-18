@@ -1,5 +1,5 @@
-<div>
-  <h1>Challenge</h1>
-
-  {@challenge.maximum_number_of_games}
-</div>
+<%= if @current_user.id == @challenge.created_by_id do %>
+  <.match_creator_view uri={@uri} />
+<% else %>
+  <.opponent_view challenge_creator={@challenge.created_by} />
+<% end %>
