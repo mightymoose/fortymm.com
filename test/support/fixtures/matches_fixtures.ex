@@ -62,4 +62,23 @@ defmodule Fortymm.MatchesFixtures do
 
     match
   end
+
+  def valid_game_attributes(attrs \\ %{}) do
+    match = match_fixture()
+
+    %{
+      status: :pending,
+      match_id: match.id
+    }
+    |> Enum.into(attrs)
+  end
+
+  def game_fixture(attrs \\ %{}) do
+    {:ok, game} =
+      attrs
+      |> valid_game_attributes()
+      |> Fortymm.Matches.create_game()
+
+    game
+  end
 end

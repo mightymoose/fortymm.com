@@ -2,6 +2,8 @@ defmodule Fortymm.Matches.Match do
   use Ecto.Schema
   import Ecto.Changeset
 
+  alias Fortymm.Repo
+
   @valid_match_lengths [1, 3, 5, 7]
 
   def valid_match_lengths, do: @valid_match_lengths
@@ -12,8 +14,13 @@ defmodule Fortymm.Matches.Match do
 
     has_many :match_participants, Fortymm.Matches.MatchParticipant
     has_many :users, through: [:match_participants, :user]
+    has_many :games, Fortymm.Matches.Game
 
     timestamps(type: :utc_datetime)
+  end
+
+  def load_games(match) do
+    Repo.preload(match, :games)
   end
 
   @doc false
