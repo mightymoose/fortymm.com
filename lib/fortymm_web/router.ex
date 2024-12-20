@@ -80,6 +80,8 @@ defmodule FortymmWeb.Router do
   scope "/", FortymmWeb do
     pipe_through [:browser]
 
+    live "/matches/:id/games/:game_id/scores/new", GamesLive.Scoring.New
+
     delete "/users/log_out", UserSessionController, :delete
 
     live_session :current_user,
