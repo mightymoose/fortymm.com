@@ -9,6 +9,7 @@ defmodule Fortymm.Matches do
   alias Fortymm.Matches.Match
   alias Fortymm.Matches.Challenge
   alias Fortymm.Matches.MatchParticipant
+  alias Fortymm.Matches.Game
 
   def create_match_participant(attrs \\ %{}) do
     %MatchParticipant{}
@@ -120,5 +121,23 @@ defmodule Fortymm.Matches do
   """
   def change_match(%Match{} = match, attrs \\ %{}) do
     Match.changeset(match, attrs)
+  end
+
+  @doc """
+  Creates a game.
+
+  ## Examples
+
+      iex> create_game(%{field: value})
+      {:ok, %Game{}}
+
+      iex> create_game(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_game(attrs \\ %{}) do
+    %Game{}
+    |> Game.changeset(attrs)
+    |> Repo.insert()
   end
 end
