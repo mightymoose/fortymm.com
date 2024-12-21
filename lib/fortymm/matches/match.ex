@@ -23,6 +23,10 @@ defmodule Fortymm.Matches.Match do
     Repo.preload(match, :games)
   end
 
+  def load_participants(match) do
+    Repo.preload(match, :match_participants)
+  end
+
   @doc false
   def changeset(match, attrs) do
     match

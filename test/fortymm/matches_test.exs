@@ -58,6 +58,7 @@ defmodule Fortymm.MatchesTest do
     alias Fortymm.Matches.Match
 
     import Fortymm.MatchesFixtures
+    import Fortymm.AccountsFixtures
 
     @invalid_attrs %{status: nil, maximum_number_of_games: nil}
 
@@ -69,6 +70,23 @@ defmodule Fortymm.MatchesTest do
     test "get_match!/1 returns the match with given id" do
       match = match_fixture()
       assert Matches.get_match!(match.id) == match
+    end
+
+    test "create_match_from_challenge/2 creates a match from a challenge" do
+      challenge = challenge_fixture()
+      user = user_fixture()
+
+      assert {:ok, %{first_game: first_game, match: match, updated_challenge: updated_challenge}} =
+               Matches.create_match_from_challenge(challenge, user)
+
+      assert match.status == :pending
+      assert match.maximum_number_of_games == challenge.maximum_number_of_games
+
+      assert first_game.match_id == match.id
+      assert first_game.status == :pending
+
+      assert updated_challenge.match_id == match.id
+      assert updated_challenge.accepted_by_id == user.id
     end
 
     test "create_match/1 with valid data creates a match" do

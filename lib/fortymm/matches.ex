@@ -10,6 +10,7 @@ defmodule Fortymm.Matches do
   alias Fortymm.Matches.Challenge
   alias Fortymm.Matches.MatchParticipant
   alias Fortymm.Matches.Game
+  alias Fortymm.Accounts.User
 
   def create_match_participant(attrs \\ %{}) do
     %MatchParticipant{}
@@ -57,6 +58,56 @@ defmodule Fortymm.Matches do
 
   """
   def get_match!(id), do: Repo.get!(Match, id)
+
+  @doc """
+  Creates a match from a challenge, marking the challenge as accepted and creating match participants.
+
+  ## Examples
+
+      iex> create_match_from_challenge(challenge, user)
+      {:ok, %{match: %Match{}, updated_challenge: %Challenge{}, participants: [%MatchParticipant{}, %MatchParticipant{}]}}
+
+      iex> create_match_from_challenge(challenge, bad_user)
+      {:error, failed_operation, failed_value, changes_so_far}
+
+  """
+  def create_match_from_challenge(%Challenge{} = challenge, %User{} = user) do
+    now = DateTime.utc_now() |> DateTime.truncate(:second)
+
+    Ecto.Multi.new()
+    |> Ecto.Multi.insert(:match, fn _changes ->
+      Match.changeset(%Match{}, %{
+        maximum_number_of_games: challenge.maximum_number_of_games,
+        status: :pending
+      })
+    end)
+    |> Ecto.Multi.update(:updated_challenge, fn %{match: match} ->
+      Challenge.accept_changeset(challenge, %{match_id: match.id, accepted_by_id: user.id})
+    end)
+    |> Ecto.Multi.insert(:first_game, fn %{match: match} ->
+      Game.changeset(%Game{}, %{
+        match_id: match.id,
+        status: :pending
+      })
+    end)
+    |> Ecto.Multi.insert_all(:participants, MatchParticipant, fn %{match: match} ->
+      [
+        %{
+          match_id: match.id,
+          user_id: challenge.created_by_id,
+          inserted_at: now,
+          updated_at: now
+        },
+        %{
+          match_id: match.id,
+          user_id: user.id,
+          inserted_at: now,
+          updated_at: now
+        }
+      ]
+    end)
+    |> Repo.transaction()
+  end
 
   @doc """
   Creates a match.
