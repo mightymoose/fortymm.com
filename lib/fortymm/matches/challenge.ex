@@ -10,6 +10,7 @@ defmodule Fortymm.Matches.Challenge do
     field :match_id, :id
 
     belongs_to :created_by, User
+    belongs_to :accepted_by, User
 
     timestamps(type: :utc_datetime)
   end
@@ -22,6 +23,14 @@ defmodule Fortymm.Matches.Challenge do
     |> validate_inclusion(:maximum_number_of_games, Fortymm.Matches.Match.valid_match_lengths())
     |> foreign_key_constraint(:match_id)
     |> foreign_key_constraint(:created_by_id)
+  end
+
+  def accept_changeset(challenge, attrs) do
+    challenge
+    |> cast(attrs, [:accepted_by_id, :match_id])
+    |> validate_required([:accepted_by_id, :match_id])
+    |> foreign_key_constraint(:accepted_by_id)
+    |> foreign_key_constraint(:match_id)
   end
 
   def load_creator(query) do

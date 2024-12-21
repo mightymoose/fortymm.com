@@ -1,5 +1,5 @@
 <%= if @current_user.id == @challenge.created_by_id do %>
   <.match_creator_view uri={@uri} />
 <% else %>
-  <.opponent_view challenge_creator={@challenge.created_by} />
+  <.opponent_view challenge={@challenge} />
 <% end %>
