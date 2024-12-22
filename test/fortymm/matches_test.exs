@@ -89,6 +89,18 @@ defmodule Fortymm.MatchesTest do
       assert updated_challenge.accepted_by_id == user.id
     end
 
+    test "create_match_from_challenge/2 broadcasts a challenge_accepted message" do
+      challenge = challenge_fixture()
+      user = user_fixture()
+
+      :ok = Matches.subscribe_to_challenge_updates()
+
+      assert {:ok, %{updated_challenge: updated_challenge}} =
+               Matches.create_match_from_challenge(challenge, user)
+
+      assert_receive {:challenge_accepted, ^updated_challenge}
+    end
+
     test "create_match/1 with valid data creates a match" do
       valid_attrs = valid_match_attributes()
       assert {:ok, %Match{} = match} = Matches.create_match(valid_attrs)

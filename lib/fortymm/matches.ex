@@ -10,7 +10,12 @@ defmodule Fortymm.Matches do
   alias Fortymm.Matches.Challenge
   alias Fortymm.Matches.MatchParticipant
   alias Fortymm.Matches.Game
+  alias Fortymm.Matches.ChallengeUpdates
   alias Fortymm.Accounts.User
+
+  def subscribe_to_challenge_updates() do
+    ChallengeUpdates.subscribe()
+  end
 
   def create_match_participant(attrs \\ %{}) do
     %MatchParticipant{}
@@ -107,7 +112,15 @@ defmodule Fortymm.Matches do
       ]
     end)
     |> Repo.transaction()
+    |> broadcast_challenge_accepted()
   end
+
+  defp broadcast_challenge_accepted({:ok, %{updated_challenge: challenge}} = result) do
+    ChallengeUpdates.broadcast_challenge_accepted(challenge)
+    result
+  end
+
+  defp broadcast_challenge_accepted(error), do: error
 
   @doc """
   Creates a match.

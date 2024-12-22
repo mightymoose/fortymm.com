@@ -4,6 +4,7 @@ defmodule Fortymm.Matches.Challenge do
 
   alias Fortymm.Accounts.User
   alias Fortymm.Repo
+  alias __MODULE__
 
   schema "challenges" do
     field :maximum_number_of_games, :integer
@@ -14,6 +15,9 @@ defmodule Fortymm.Matches.Challenge do
 
     timestamps(type: :utc_datetime)
   end
+
+  def accepted?(%Challenge{match_id: nil}), do: false
+  def accepted?(%Challenge{match_id: _}), do: true
 
   @doc false
   def changeset(challenge, attrs) do
