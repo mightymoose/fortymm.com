@@ -2,6 +2,7 @@ defmodule FortymmWeb.ChallengesLive.Show do
   use FortymmWeb, :live_view
 
   alias Fortymm.Matches
+  alias Fortymm.Matches.Match
   alias Fortymm.Matches.Challenge
 
   def mount(_params, _session, socket) do
@@ -10,7 +11,13 @@ defmodule FortymmWeb.ChallengesLive.Show do
 
   def handle_params(%{"id" => id}, uri, socket) do
     challenge = load_challenge!(id)
-    {:noreply, assign(socket, challenge: challenge, uri: uri)}
+
+    if Challenge.accepted?(challenge) do
+      {:noreply, handle_accepted_challenge(socket, challenge)}
+    else
+      Matches.subscribe_to_challenge_updates()
+      {:noreply, assign(socket, challenge: challenge, uri: uri)}
+    end
   end
 
   def match_creator_view(assigns) do
@@ -64,6 +71,39 @@ defmodule FortymmWeb.ChallengesLive.Show do
          |> put_flash(:error, "Something went wrong accepting the challenge. Please try again.")}
     end
   end
+
+  def handle_info({:challenge_accepted, challenge}, socket),
+    do: {:noreply, handle_accepted_challenge(socket, challenge)}
+
+  defp handle_accepted_challenge(socket, challenge) do
+    current_user = socket.assigns.current_user
+
+    match =
+      challenge.match_id
+      |> Matches.get_match!()
+      |> Match.load_participants()
+
+    push_navigate(socket, to: accepted_match_redirect(match, current_user))
+  end
+
+  defp accepted_match_redirect(match, user) do
+    case Enum.any?(match.match_participants, fn participant -> participant.user_id == user.id end) do
+      true ->
+        pending_game =
+          match
+          |> Match.load_games()
+          |> Map.get(:games)
+          |> Enum.find(fn game -> game.status == :pending end)
+
+        redirect_for_game(match, pending_game)
+
+      _ ->
+        ~p"/matches/#{match.id}"
+    end
+  end
+
+  defp redirect_for_game(match, nil), do: ~p"/matches/#{match.id}"
+  defp redirect_for_game(match, game), do: ~p"/matches/#{match.id}/games/#{game.id}/scores/new"
 
   defp load_challenge!(id) do
     id

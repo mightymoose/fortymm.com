@@ -7,12 +7,110 @@ defmodule FortymmWeb.ChallengesLive.ShowTest do
 
   alias Fortymm.Matches
   alias Fortymm.Matches.Match
+  alias Fortymm.Matches.Game
+  alias Fortymm.Repo
 
   describe "GET /challenges/:id" do
     setup do
       user = user_fixture()
       challenge = challenge_fixture(%{created_by_id: user.id})
       %{challenge: challenge, user: user}
+    end
+
+    test "redirects the creator to the game page when there is a pending game", %{
+      conn: conn,
+      challenge: challenge,
+      user: user
+    } do
+      opponent = user_fixture()
+
+      {:ok, %{match: %{id: match_id}, first_game: %{id: game_id}}} =
+        Matches.create_match_from_challenge(challenge, opponent)
+
+      expected_redirect_url = ~p"/matches/#{match_id}/games/#{game_id}/scores/new"
+
+      assert {:error, {:live_redirect, %{to: ^expected_redirect_url}}} =
+               conn
+               |> log_in_user(user)
+               |> live(~p"/challenges/#{challenge.id}")
+    end
+
+    test "redirects the creator to the match page when there is no pending game", %{
+      conn: conn,
+      user: user,
+      challenge: challenge
+    } do
+      opponent = user_fixture()
+
+      {:ok, %{match: %{id: match_id}, first_game: game}} =
+        Matches.create_match_from_challenge(challenge, opponent)
+
+      game
+      |> Game.changeset(%{status: :completed})
+      |> Repo.update()
+
+      expected_redirect_url = ~p"/matches/#{match_id}"
+
+      assert {:error, {:live_redirect, %{to: ^expected_redirect_url}}} =
+               conn
+               |> log_in_user(user)
+               |> live(~p"/challenges/#{challenge.id}")
+    end
+
+    test "redirects the opponent to the game page when there is a pending game", %{
+      conn: conn,
+      challenge: challenge
+    } do
+      opponent = user_fixture()
+
+      {:ok, %{match: %{id: match_id}, first_game: %{id: game_id}}} =
+        Matches.create_match_from_challenge(challenge, opponent)
+
+      expected_redirect_url = ~p"/matches/#{match_id}/games/#{game_id}/scores/new"
+
+      assert {:error, {:live_redirect, %{to: ^expected_redirect_url}}} =
+               conn
+               |> log_in_user(opponent)
+               |> live(~p"/challenges/#{challenge.id}")
+    end
+
+    test "redirects the opponent to the match page when there is no pending game", %{
+      conn: conn,
+      challenge: challenge
+    } do
+      opponent = user_fixture()
+
+      {:ok, %{match: %{id: match_id}, first_game: game}} =
+        Matches.create_match_from_challenge(challenge, opponent)
+
+      game
+      |> Game.changeset(%{status: :completed})
+      |> Repo.update()
+
+      expected_redirect_url = ~p"/matches/#{match_id}"
+
+      assert {:error, {:live_redirect, %{to: ^expected_redirect_url}}} =
+               conn
+               |> log_in_user(opponent)
+               |> live(~p"/challenges/#{challenge.id}")
+    end
+
+    test "redirects other users to the match page when the challenge has already been accepted",
+         %{
+           conn: conn,
+           challenge: challenge
+         } do
+      opponent = user_fixture()
+      other_user = user_fixture()
+
+      {:ok, %{match: %{id: match_id}}} = Matches.create_match_from_challenge(challenge, opponent)
+
+      assert {:error, {:live_redirect, %{to: redirect_url}}} =
+               conn
+               |> log_in_user(other_user)
+               |> live(~p"/challenges/#{challenge.id}")
+
+      assert redirect_url == ~p"/matches/#{match_id}"
     end
 
     test "renders the challenge when the creator is logged in", %{
@@ -41,6 +139,31 @@ defmodule FortymmWeb.ChallengesLive.ShowTest do
         |> live(~p"/challenges/#{challenge.id}")
 
       assert html =~ "#{user.username} has invited you to play"
+    end
+
+    test "redirects the creator to the first game when the opponent accepts the challenge", %{
+      conn: conn,
+      challenge: challenge,
+      user: user
+    } do
+      opponent = user_fixture()
+
+      {:ok, lv, _html} =
+        conn
+        |> log_in_user(user)
+        |> live(~p"/challenges/#{challenge.id}")
+
+      {:ok, opponent_lv, _html} =
+        conn
+        |> log_in_user(opponent)
+        |> live(~p"/challenges/#{challenge.id}")
+
+      assert {:error, {:live_redirect, %{to: redirect_url}}} =
+               opponent_lv
+               |> element(~s|button:fl-contains("Accept Challenge")|)
+               |> render_click()
+
+      assert_redirect(lv, redirect_url)
     end
 
     test "redirects the opponent to the first game when they accept the challenge", %{
