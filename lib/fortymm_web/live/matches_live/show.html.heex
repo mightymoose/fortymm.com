@@ -1,4 +1,14 @@
-<h1>Match</h1>
+<div class="flex flex-col items-start justify-between gap-x-8 gap-y-4 py-4 sm:flex-row sm:items-center">
+  <.players match={@match} />
+  <.status match={@match} />
+</div>
 
-<p>Status: {@match.status}</p>
-<p>Maximum number of games: {@match.maximum_number_of_games}</p>
+<div class="mt-4 max-w-lg">
+  <div class="px-4 py-5 sm:p-6">
+    <div class="grid grid-cols-{@match.maximum_number_of_games} gap-4">
+      <%= for game_number <- 1..@match.maximum_number_of_games do %>
+        <.game game_number={game_number} />
+      <% end %>
+    </div>
+  </div>
+</div>

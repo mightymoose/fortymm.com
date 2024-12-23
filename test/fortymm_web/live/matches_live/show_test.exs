@@ -3,10 +3,16 @@ defmodule FortymmWeb.MatchesLive.ShowTest do
 
   import Phoenix.LiveViewTest
   import Fortymm.MatchesFixtures
+  import Fortymm.AccountsFixtures
 
   describe "GET /matches/:id" do
     setup do
-      %{match: match_fixture()}
+      opponent = user_fixture()
+
+      challenge = challenge_fixture()
+      {:ok, %{match: match}} = Fortymm.Matches.create_match_from_challenge(challenge, opponent)
+
+      %{match: match}
     end
 
     test "renders match", %{conn: conn, match: match} do
