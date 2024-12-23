@@ -123,7 +123,7 @@ defmodule FortymmWeb.ChallengesLive.ShowTest do
         |> log_in_user(user)
         |> live(~p"/challenges/#{challenge.id}")
 
-      assert html =~ "To invite someone to play, give this URL"
+      assert html =~ "To invite someone to play, share this URL"
     end
 
     test "renders the opponent view when the opponent is logged in", %{

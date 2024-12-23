@@ -2,9 +2,12 @@ defmodule Fortymm.Matches.MatchParticipant do
   use Ecto.Schema
   import Ecto.Changeset
 
+  alias Fortymm.Accounts.User
+  alias Fortymm.Matches.Match
+
   schema "match_participants" do
-    field :user_id, :id
-    field :match_id, :id
+    belongs_to :user, User
+    belongs_to :match, Match
 
     timestamps(type: :utc_datetime)
   end

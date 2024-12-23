@@ -25,7 +25,15 @@ defmodule FortymmWeb.ChallengesLive.Show do
     <div class="grid md:grid-cols-2 grid-rows-2 gap-4">
       <div class="overflow-hidden rounded-lg bg-white shadow">
         <div class="px-4 py-5 sm:p-6">
-          To invite someone to play, give this URL
+          To invite someone to play, share this URL
+
+          <div class="flex items-center gap-2">
+            <input type="text" id="challenge_url" value={@uri} name="challenge_url" disabled class="block w-full rounded-lg text-zinc-900 focus:ring-0 sm:text-sm sm:leading-6" />
+            <button id="copy_challenge_url" data-to="#challenge_url" phx-hook="Copy" class="rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+              <.icon name="hero-clipboard" class="h-5 w-5 block" />
+              <.icon name="hero-check" class="h-5 w-5 hidden" />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -42,7 +50,7 @@ defmodule FortymmWeb.ChallengesLive.Show do
     ~H"""
     <div class="grid md:grid-cols-2 grid-rows-2 gap-4">
       <div>
-        {@challenge.created_by.username} has invited you to play
+        {@challenge.created_by.username} has invited you to play a best of {@challenge.maximum_number_of_games} match
         <button
           phx-click="accept_challenge"
           class="mt-4 rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
