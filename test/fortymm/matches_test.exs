@@ -3,6 +3,49 @@ defmodule Fortymm.MatchesTest do
 
   alias Fortymm.Matches
 
+  describe "scoring_proposals" do
+    import Fortymm.MatchesFixtures
+    import Fortymm.AccountsFixtures
+    alias Fortymm.Matches.Match
+
+    test "create_scoring_proposal/1 with valid data creates a scoring proposal" do
+      first_user = user_fixture()
+      second_user = user_fixture()
+
+      challenge =
+        challenge_fixture(%{
+          created_by_id: first_user.id,
+          maximum_number_of_games: 7
+        })
+
+      {:ok, %{match: match, first_game: first_game}} =
+        Matches.create_match_from_challenge(challenge, second_user)
+
+      match = Match.load_participants(match)
+      [first_participant, second_participant] = match.match_participants
+
+      assert {:ok, scoring_proposal} =
+               Matches.create_scoring_proposal(%{
+                 game_id: first_game.id,
+                 created_by_id: first_user.id,
+                 scores: [
+                   %{match_participant_id: first_participant.id, score: 10},
+                   %{match_participant_id: second_participant.id, score: 12}
+                 ]
+               })
+
+      assert scoring_proposal.created_by_id == first_user.id
+      assert scoring_proposal.game_id == first_game.id
+      assert length(scoring_proposal.scores) == 2
+      [first_score, second_score] = scoring_proposal.scores
+
+      assert first_score.match_participant_id == first_participant.id
+      assert first_score.score == 10
+      assert second_score.match_participant_id == second_participant.id
+      assert second_score.score == 12
+    end
+  end
+
   describe "match_participants" do
     import Fortymm.MatchesFixtures
 

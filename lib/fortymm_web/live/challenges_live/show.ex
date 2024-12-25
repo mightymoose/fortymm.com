@@ -11,12 +11,13 @@ defmodule FortymmWeb.ChallengesLive.Show do
 
   def handle_params(%{"id" => id}, uri, socket) do
     challenge = load_challenge!(id)
+    socket = assign(socket, challenge: challenge, uri: uri)
 
     if Challenge.accepted?(challenge) do
       {:noreply, handle_accepted_challenge(socket, challenge)}
     else
       Matches.subscribe_to_challenge_updates()
-      {:noreply, assign(socket, challenge: challenge, uri: uri)}
+      {:noreply, socket}
     end
   end
 
@@ -26,10 +27,21 @@ defmodule FortymmWeb.ChallengesLive.Show do
       <div class="overflow-hidden rounded-lg bg-white shadow">
         <div class="px-4 py-5 sm:p-6">
           To invite someone to play, share this URL
-
           <div class="flex items-center gap-2">
-            <input type="text" id="challenge_url" value={@uri} name="challenge_url" disabled class="block w-full rounded-lg text-zinc-900 focus:ring-0 sm:text-sm sm:leading-6" />
-            <button id="copy_challenge_url" data-to="#challenge_url" phx-hook="Copy" class="rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+            <input
+              type="text"
+              id="challenge_url"
+              value={@uri}
+              name="challenge_url"
+              disabled
+              class="block w-full rounded-lg text-zinc-900 focus:ring-0 sm:text-sm sm:leading-6"
+            />
+            <button
+              id="copy_challenge_url"
+              data-to="#challenge_url"
+              phx-hook="Copy"
+              class="rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+            >
               <.icon name="hero-clipboard" class="h-5 w-5 block" />
               <.icon name="hero-check" class="h-5 w-5 hidden" />
             </button>
@@ -85,13 +97,20 @@ defmodule FortymmWeb.ChallengesLive.Show do
 
   defp handle_accepted_challenge(socket, challenge) do
     current_user = socket.assigns.current_user
+    this_challenge_id = socket.assigns.challenge.id
 
-    match =
-      challenge.match_id
-      |> Matches.get_match!()
-      |> Match.load_participants()
+    case challenge.id do
+      ^this_challenge_id ->
+        match =
+          challenge.match_id
+          |> Matches.get_match!()
+          |> Match.load_participants()
 
-    push_navigate(socket, to: accepted_match_redirect(match, current_user))
+        push_navigate(socket, to: accepted_match_redirect(match, current_user))
+
+      _ ->
+        socket
+    end
   end
 
   defp accepted_match_redirect(match, user) do

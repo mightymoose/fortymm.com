@@ -186,6 +186,8 @@ defmodule FortymmWeb.ChallengesLive.ShowTest do
       assert [_, match_id, game_id] =
                Regex.run(~r|/matches/(\d+)/games/(\d+)/scores/new|, redirect_url)
 
+      assert_redirected(lv, redirect_url)
+
       match =
         match_id
         |> Matches.get_match!()

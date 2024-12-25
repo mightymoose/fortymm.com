@@ -1,3 +1,19 @@
 <div class="max-w-2xl mx-auto py-8 px-4">
   <h1 class="text-2xl font-bold mb-4">Score Game</h1>
+
+  <.simple_form for={@score_proposal} phx-submit="save">
+    <.inputs_for :let={score} field={@score_proposal[:scores]}>
+      <input
+        type="hidden"
+        name={score[:participant_id].name}
+        value={score[:participant_id].value}
+      />
+      <.input
+        field={score[:score]}
+        type="number"
+        label={score_label(@match, @current_user, score)}
+        required
+      />
+    </.inputs_for>
+  </.simple_form>
 </div>

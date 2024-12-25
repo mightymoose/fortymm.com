@@ -17,12 +17,6 @@ defmodule FortymmWeb.Router do
     plug :accepts, ["json"]
   end
 
-  scope "/", FortymmWeb do
-    pipe_through :browser
-
-    live "/matches/:id", MatchesLive.Show
-  end
-
   # Other scopes may use custom stacks.
   # scope "/api", FortymmWeb do
   #   pipe_through :api
@@ -80,12 +74,13 @@ defmodule FortymmWeb.Router do
   scope "/", FortymmWeb do
     pipe_through [:browser]
 
-    live "/matches/:id/games/:game_id/scores/new", GamesLive.Scoring.New
+    live "/matches/:id", MatchesLive.Show
 
     delete "/users/log_out", UserSessionController, :delete
 
     live_session :current_user,
       on_mount: [{FortymmWeb.UserAuth, :mount_current_user}] do
+      live "/matches/:match_id/games/:game_id/scores/new", GamesLive.Scoring.New
       live "/users/confirm/:token", UserConfirmationLive, :edit
       live "/users/confirm", UserConfirmationInstructionsLive, :new
     end

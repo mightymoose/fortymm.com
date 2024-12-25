@@ -12,6 +12,17 @@ defmodule Fortymm.Matches do
   alias Fortymm.Matches.Game
   alias Fortymm.Matches.ChallengeUpdates
   alias Fortymm.Accounts.User
+  alias Fortymm.Matches.ScoringProposal
+
+  def create_scoring_proposal(attrs \\ %{}) do
+    %ScoringProposal{}
+    |> ScoringProposal.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  def change_scoring_proposal(%ScoringProposal{} = scoring_proposal, attrs \\ %{}) do
+    ScoringProposal.changeset(scoring_proposal, attrs)
+  end
 
   def subscribe_to_challenge_updates() do
     ChallengeUpdates.subscribe()

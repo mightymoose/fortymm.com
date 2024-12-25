@@ -5,6 +5,50 @@ defmodule Fortymm.MatchesFixtures do
   """
 
   alias Fortymm.AccountsFixtures
+  alias Fortymm.Matches
+  alias Fortymm.Matches.Match
+
+  def valid_score_attributes(attrs \\ %{}) do
+    scoring_proposal = scoring_proposal_fixture()
+    match_participant = match_participant_fixture()
+
+    %{
+      score: Enum.random(1..100),
+      scoring_proposal_id: scoring_proposal.id,
+      match_participant_id: match_participant.id
+    }
+    |> Enum.into(attrs)
+  end
+
+  def valid_scoring_proposal_attributes(attrs \\ %{}) do
+    challenge = challenge_fixture()
+    user = AccountsFixtures.user_fixture()
+
+    {:ok, %{first_game: first_game, match: match}} =
+      Matches.create_match_from_challenge(challenge, user)
+
+    match = Match.load_participants(match)
+    [first_participant, second_participant] = match.match_participants
+
+    attrs
+    |> Enum.into(%{
+      game_id: first_game.id,
+      created_by_id: user.id,
+      scores: [
+        %{match_participant_id: first_participant.id, score: 11},
+        %{match_participant_id: second_participant.id, score: 0}
+      ]
+    })
+  end
+
+  def scoring_proposal_fixture(attrs \\ %{}) do
+    {:ok, scoring_proposal} =
+      attrs
+      |> valid_scoring_proposal_attributes()
+      |> Fortymm.Matches.create_scoring_proposal()
+
+    scoring_proposal
+  end
 
   def valid_match_participant_attributes(attrs \\ %{}) do
     match = match_fixture()
