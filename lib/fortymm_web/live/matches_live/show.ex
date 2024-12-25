@@ -48,18 +48,17 @@ defmodule FortymmWeb.MatchesLive.Show do
 
   def game(assigns) do
     ~H"""
-        <div>
-        <div class="overflow-hidden rounded-lg bg-white bg-gray-50 border border-gray-200 h-40 flex flex-col">
-            <div class="text-center px-4 py-5 font-medium text-gray-700">
-            Game {@game_number}
-          </div>
-          <div class="text-center text-sm text-gray-500 grow flex justify-center items-center">
-            Not Started
-          </div>
+    <div>
+      <div class="overflow-hidden rounded-lg bg-white bg-gray-50 border border-gray-200 h-40 flex flex-col">
+        <div class="text-center px-4 py-5 font-medium text-gray-700">
+          Game {@game_number}
         </div>
-  </div>
-  """
-
+        <div class="text-center text-sm text-gray-500 grow flex justify-center items-center">
+          Not Started
+        </div>
+      </div>
+    </div>
+    """
   end
 
   defp status_styles(:pending), do: "text-gray-400 ring-gray-400/30 bg-gray-400/10"
