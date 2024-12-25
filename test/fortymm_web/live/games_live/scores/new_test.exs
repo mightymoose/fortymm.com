@@ -61,5 +61,6 @@ defmodule FortymmWeb.GamesLive.Scores.NewTest do
 
     test "redirects the user to the waiting for verification page when they propose a score"
     test "redirects the opponent to the verification page when a score is proposed"
+    test "notifies the user when the score is entered"
   end
 end

@@ -78,6 +78,8 @@ defmodule FortymmWeb.Router do
 
     delete "/users/log_out", UserSessionController, :delete
 
+    get "/matches/:id/games/:game_id/scores/:score_id/verification/new", ScoringProposalVerificationController, :new
+
     live_session :current_user,
       on_mount: [{FortymmWeb.UserAuth, :mount_current_user}] do
       live "/matches/:match_id/games/:game_id/scores/new", GamesLive.Scoring.New
