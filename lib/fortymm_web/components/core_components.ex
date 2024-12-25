@@ -127,24 +127,47 @@ defmodule FortymmWeb.CoreComponents do
     <div
       :if={msg = render_slot(@inner_block) || Phoenix.Flash.get(@flash, @kind)}
       id={@id}
-      phx-click={JS.push("lv:clear-flash", value: %{key: @kind}) |> hide("##{@id}")}
-      role="alert"
-      class={[
-        "fixed top-2 right-2 mr-2 w-80 sm:w-96 z-50 rounded-lg p-3 ring-1",
-        @kind == :info && "bg-emerald-50 text-emerald-800 ring-emerald-500 fill-cyan-900",
-        @kind == :error && "bg-rose-50 text-rose-900 shadow-md ring-rose-500 fill-rose-900"
-      ]}
+      x-show="show"
+      x-init="$nextTick(() => show = true)"
+      x-cloak
+      x-transition:enter="transform ease-out duration-300 transition"
+      x-transition:enter-start="translate-y-2 opacity-0 sm:translate-y-0 sm:translate-x-2"
+      x-transition:enter-end="translate-y-0 opacity-100 sm:translate-x-0"
+      phx-click={JS.push("lv:clear-flash", value: %{key: @kind}) |> hide_flash("##{@id}")}
+      class="x-cloak pointer-events-auto w-full max-w-sm overflow-hidden rounded-lg bg-white shadow-lg ring-1 ring-black/5"
       {@rest}
     >
-      <p :if={@title} class="flex items-center gap-1.5 text-sm font-semibold leading-6">
-        <.icon :if={@kind == :info} name="hero-information-circle-mini" class="h-4 w-4" />
-        <.icon :if={@kind == :error} name="hero-exclamation-circle-mini" class="h-4 w-4" />
-        {@title}
-      </p>
-      <p class="mt-2 text-sm leading-5">{msg}</p>
-      <button type="button" class="group absolute top-1 right-1 p-2" aria-label={gettext("close")}>
-        <.icon name="hero-x-mark-solid" class="h-5 w-5 opacity-40 group-hover:opacity-70" />
-      </button>
+      <div class="p-4">
+        <div class="flex items-start">
+          <div class="shrink-0">
+            <.icon name="hero-check-circle" class="h-6 w-6 text-green-400" :if={@kind == :info} />
+            <.icon :if={@kind == :error} name="hero-exclamation-circle" class="h-6 w-6 text-red-400" />
+          </div>
+          <div class="ml-3 w-0 flex-1 pt-0.5">
+            <p class="text-sm font-medium text-gray-900" :if={@title}>
+              <%= @title %>
+            </p>
+            <p class="mt-1 text-sm text-gray-500">{msg}</p>
+          </div>
+          <div class="ml-4 flex shrink-0">
+            <button
+              type="button"
+              class="inline-flex rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+            >
+              <span class="sr-only">Close</span>
+              <svg
+                class="size-5"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                aria-hidden="true"
+                data-slot="icon"
+              >
+                <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
     """
   end
@@ -161,32 +184,39 @@ defmodule FortymmWeb.CoreComponents do
 
   def flash_group(assigns) do
     ~H"""
-    <div id={@id}>
-      <.flash kind={:info} title={gettext("Success!")} flash={@flash} />
-      <.flash kind={:error} title={gettext("Error!")} flash={@flash} />
-      <.flash
-        id="client-error"
-        kind={:error}
-        title={gettext("We can't find the internet")}
-        phx-disconnected={show(".phx-client-error #client-error")}
-        phx-connected={hide("#client-error")}
-        hidden
-      >
-        {gettext("Attempting to reconnect")}
-        <.icon name="hero-arrow-path" class="ml-1 h-3 w-3 animate-spin" />
-      </.flash>
+    <div
+      id={@id}
+      aria-live="assertive"
+      class="pointer-events-none fixed inset-0 flex items-end px-4 py-6 sm:items-start sm:p-6"
+      x-data="{ show: false }"
+    >
+      <div class="flex w-full flex-col items-center space-y-4 sm:items-end">
+        <.flash kind={:info} title={gettext("Success!")} flash={@flash} />
+        <.flash kind={:error} title={gettext("Error!")} flash={@flash} />
+        <.flash
+          id="client-error"
+          kind={:error}
+          title={gettext("We can't find the internet")}
+          phx-disconnected={show(".phx-client-error #client-error")}
+          phx-connected={hide("#client-error")}
+          hidden
+        >
+          {gettext("Attempting to reconnect")}
+          <.icon name="hero-arrow-path" class="ml-1 h-3 w-3 animate-spin" />
+        </.flash>
 
-      <.flash
-        id="server-error"
-        kind={:error}
-        title={gettext("Something went wrong!")}
-        phx-disconnected={show(".phx-server-error #server-error")}
-        phx-connected={hide("#server-error")}
-        hidden
-      >
-        {gettext("Hang in there while we get back on track")}
-        <.icon name="hero-arrow-path" class="ml-1 h-3 w-3 animate-spin" />
-      </.flash>
+        <.flash
+          id="server-error"
+          kind={:error}
+          title={gettext("Something went wrong!")}
+          phx-disconnected={show(".phx-server-error #server-error")}
+          phx-connected={hide("#server-error")}
+          hidden
+        >
+          {gettext("Hang in there while we get back on track")}
+          <.icon name="hero-arrow-path" class="ml-1 h-3 w-3 animate-spin" />
+        </.flash>
+      </div>
     </div>
     """
   end
@@ -613,6 +643,18 @@ defmodule FortymmWeb.CoreComponents do
   end
 
   ## JS Commands
+
+  @spec hide_flash(any()) :: struct()
+  def hide_flash(js \\ %JS{}, selector) do
+    JS.hide(js,
+      to: selector,
+      time: 300,
+      transition:
+        {"transition ease-in duration-300",
+         "opacity-100",
+         "opacity-0"}
+    )
+  end
 
   def show(js \\ %JS{}, selector) do
     JS.show(js,
