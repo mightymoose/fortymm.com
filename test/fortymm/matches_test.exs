@@ -8,6 +8,31 @@ defmodule Fortymm.MatchesTest do
     import Fortymm.AccountsFixtures
     alias Fortymm.Matches.Match
 
+    test "create_scoring_proposal/1 with valid data broadcasts a scoring_proposal_created message" do
+      Matches.subscribe_to_scoring_updates()
+
+      user = user_fixture()
+      challenge = challenge_fixture()
+
+      {:ok, %{match: match, first_game: first_game}} =
+        Matches.create_match_from_challenge(challenge, user)
+
+      match = Match.load_participants(match)
+      [first_participant, second_participant] = match.match_participants
+
+      assert {:ok, scoring_proposal} =
+               Matches.create_scoring_proposal(%{
+                 game_id: first_game.id,
+                 created_by_id: user.id,
+                 scores: [
+                   %{match_participant_id: first_participant.id, score: 10},
+                   %{match_participant_id: second_participant.id, score: 12}
+                 ]
+               })
+
+      assert_receive {:scoring_proposal_created, ^scoring_proposal}
+    end
+
     test "create_scoring_proposal/1 with valid data creates a scoring proposal" do
       first_user = user_fixture()
       second_user = user_fixture()

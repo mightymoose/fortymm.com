@@ -13,12 +13,21 @@ defmodule Fortymm.Matches do
   alias Fortymm.Matches.ChallengeUpdates
   alias Fortymm.Accounts.User
   alias Fortymm.Matches.ScoringProposal
+  alias Fortymm.Matches.ScoringUpdates
 
   def create_scoring_proposal(attrs \\ %{}) do
     %ScoringProposal{}
     |> ScoringProposal.changeset(attrs)
     |> Repo.insert()
+    |> broadcast_scoring_proposal_created()
   end
+
+  defp broadcast_scoring_proposal_created({:ok, scoring_proposal}) do
+    ScoringUpdates.broadcast_scoring_proposal_created(scoring_proposal)
+    {:ok, scoring_proposal}
+  end
+
+  defp broadcast_scoring_proposal_created(error), do: error
 
   def change_scoring_proposal(%ScoringProposal{} = scoring_proposal, attrs \\ %{}) do
     ScoringProposal.changeset(scoring_proposal, attrs)
@@ -26,6 +35,10 @@ defmodule Fortymm.Matches do
 
   def subscribe_to_challenge_updates() do
     ChallengeUpdates.subscribe()
+  end
+
+  def subscribe_to_scoring_updates() do
+    ScoringUpdates.subscribe()
   end
 
   def create_match_participant(attrs \\ %{}) do
@@ -39,6 +52,19 @@ defmodule Fortymm.Matches do
     |> Challenge.changeset(attrs)
     |> Repo.insert()
   end
+
+  def scoring_proposals_for_game(game_id) do
+    ScoringProposal
+    |> ScoringProposal.for_game(game_id)
+    |> Repo.all()
+    |> ScoringProposal.load_scores()
+  end
+
+  def get_scoring_proposal!(id),
+    do:
+      ScoringProposal
+      |> Repo.get!(id)
+      |> ScoringProposal.load_scores()
 
   def get_challenge!(id), do: Repo.get!(Challenge, id)
 
