@@ -16,7 +16,10 @@ defmodule FortymmWeb.ChallengesLive.Show do
     if Challenge.accepted?(challenge) do
       {:noreply, handle_accepted_challenge(socket, challenge)}
     else
-      Matches.subscribe_to_challenge_updates()
+      if connected?(socket) do
+        Matches.subscribe_to_challenge_updates()
+      end
+
       {:noreply, socket}
     end
   end

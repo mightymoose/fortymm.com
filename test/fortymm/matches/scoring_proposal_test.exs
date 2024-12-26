@@ -50,6 +50,15 @@ defmodule Fortymm.Matches.ScoringProposalTest do
       refute ScoringProposal.changeset(%ScoringProposal{}, attrs).valid?
     end
 
+    test "is invalid if someone went to deuce without the other player being 2 behind" do
+      proposal = valid_scoring_proposal_attributes()
+      [first_score, second_score] = proposal.scores
+      scores = [%{first_score | score: 10}, %{second_score | score: 11}]
+      attrs = valid_scoring_proposal_attributes(%{scores: scores})
+
+      refute ScoringProposal.changeset(%ScoringProposal{}, attrs).valid?
+    end
+
     test "is invalid with an invalid created_by_id" do
       attrs = valid_scoring_proposal_attributes(%{created_by_id: "invalid"})
 
