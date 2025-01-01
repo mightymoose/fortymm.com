@@ -16,6 +16,36 @@ defmodule Fortymm.Matches do
   alias Fortymm.Matches.ScoringUpdates
   alias Fortymm.Matches.ScoringProposalResolution
 
+  def complete_game(game_id) do
+    game_id
+    |> get_game!()
+    |> Game.changeset(%{status: :completed})
+    |> Repo.update()
+    |> maybe_complete_match()
+  end
+
+  defp maybe_complete_match({:ok, game}) do
+    match =
+      game.match_id
+      |> get_match!()
+      |> Match.load_scoring()
+      |> Match.load_users()
+
+    case Match.winner(match) do
+      nil ->
+        {:ok, new_game} = create_game(%{match_id: match.id, status: :in_progress})
+        {:match_not_completed, new_game}
+
+      winner ->
+        {:ok, match} = update_match(match, %{status: :completed})
+        {:match_completed, match, winner}
+    end
+  end
+
+  defp maybe_complete_match(error), do: error
+
+  defp get_game!(game_id), do: Repo.get!(Game, game_id)
+
   def create_scoring_proposal_resolution(attrs \\ %{}) do
     %ScoringProposalResolution{}
     |> ScoringProposalResolution.changeset(attrs)
@@ -127,7 +157,7 @@ defmodule Fortymm.Matches do
     |> Ecto.Multi.insert(:match, fn _changes ->
       Match.changeset(%Match{}, %{
         maximum_number_of_games: challenge.maximum_number_of_games,
-        status: :pending
+        status: :in_progress
       })
     end)
     |> Ecto.Multi.update(:updated_challenge, fn %{match: match} ->
@@ -136,7 +166,7 @@ defmodule Fortymm.Matches do
     |> Ecto.Multi.insert(:first_game, fn %{match: match} ->
       Game.changeset(%Game{}, %{
         match_id: match.id,
-        status: :pending
+        status: :in_progress
       })
     end)
     |> Ecto.Multi.insert_all(:participants, MatchParticipant, fn %{match: match} ->

@@ -3,6 +3,7 @@ defmodule Fortymm.Matches.Match do
   import Ecto.Changeset
 
   alias Fortymm.Repo
+  alias Fortymm.Matches.Game
 
   @valid_match_lengths [1, 3, 5, 7]
 
@@ -14,7 +15,7 @@ defmodule Fortymm.Matches.Match do
 
     has_many :match_participants, Fortymm.Matches.MatchParticipant
     has_many :users, through: [:match_participants, :user]
-    has_many :games, Fortymm.Matches.Game
+    has_many :games, Game
 
     timestamps(type: :utc_datetime)
   end
@@ -29,6 +30,24 @@ defmodule Fortymm.Matches.Match do
         ]
       ]
     )
+  end
+
+  def winner(match) do
+    {winning_so_far, games_won} =
+      match.games
+      |> Enum.group_by(&Game.winner/1)
+      |> Enum.max_by(fn {_winner, games} -> length(games) end)
+
+    cond do
+      winning_so_far == nil ->
+        nil
+
+      length(games_won) >= match.maximum_number_of_games / 2 ->
+        winning_so_far
+
+      true ->
+        nil
+    end
   end
 
   def load_games(match) do

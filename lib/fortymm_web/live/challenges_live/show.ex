@@ -119,13 +119,13 @@ defmodule FortymmWeb.ChallengesLive.Show do
   defp accepted_match_redirect(match, user) do
     case Enum.any?(match.match_participants, fn participant -> participant.user_id == user.id end) do
       true ->
-        pending_game =
+        game_in_progress =
           match
           |> Match.load_games()
           |> Map.get(:games)
-          |> Enum.find(fn game -> game.status == :pending end)
+          |> Enum.find(fn game -> game.status == :in_progress end)
 
-        redirect_for_game(match, pending_game)
+        redirect_for_game(match, game_in_progress)
 
       _ ->
         ~p"/matches/#{match.id}"

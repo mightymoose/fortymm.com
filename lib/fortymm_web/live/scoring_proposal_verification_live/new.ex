@@ -18,7 +18,16 @@ defmodule FortymmWeb.ScoringProposalVerificationLive.New do
         scoring_proposal_id: scoring_proposal.id
       })
 
-    {:noreply, socket}
+    case Matches.complete_game(scoring_proposal.game_id) do
+      {:match_completed, match, _winner} ->
+        {:noreply, redirect(socket, to: ~p"/matches/#{match.id}")}
+
+      {:match_not_completed, next_game} ->
+        {:noreply,
+         redirect(socket,
+           to: ~p"/matches/#{next_game.match_id}/games/#{next_game.id}/scores/new"
+         )}
+    end
   end
 
   def handle_event("reject", _params, socket) do

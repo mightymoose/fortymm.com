@@ -17,7 +17,7 @@ defmodule FortymmWeb.ChallengesLive.ShowTest do
       %{challenge: challenge, user: user}
     end
 
-    test "redirects the creator to the game page when there is a pending game", %{
+    test "redirects the creator to the game page when there is a game in progress", %{
       conn: conn,
       challenge: challenge,
       user: user
@@ -35,7 +35,7 @@ defmodule FortymmWeb.ChallengesLive.ShowTest do
                |> live(~p"/challenges/#{challenge.id}")
     end
 
-    test "redirects the creator to the match page when there is no pending game", %{
+    test "redirects the creator to the match page when there is no game in progress", %{
       conn: conn,
       user: user,
       challenge: challenge
@@ -57,7 +57,7 @@ defmodule FortymmWeb.ChallengesLive.ShowTest do
                |> live(~p"/challenges/#{challenge.id}")
     end
 
-    test "redirects the opponent to the game page when there is a pending game", %{
+    test "redirects the opponent to the game page when there is a game in progress", %{
       conn: conn,
       challenge: challenge
     } do
@@ -207,7 +207,7 @@ defmodule FortymmWeb.ChallengesLive.ShowTest do
       {expected_game_id, ""} = Integer.parse(game_id)
       {expected_match_id, ""} = Integer.parse(match_id)
 
-      assert [%{id: ^expected_game_id, status: :pending, match_id: ^expected_match_id}] =
+      assert [%{id: ^expected_game_id, status: :in_progress, match_id: ^expected_match_id}] =
                match.games
     end
 
