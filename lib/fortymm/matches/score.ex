@@ -7,6 +7,8 @@ defmodule Fortymm.Matches.Score do
     belongs_to :scoring_proposal, Fortymm.Matches.ScoringProposal
     belongs_to :match_participant, Fortymm.Matches.MatchParticipant
 
+    has_one :scoring_proposal_resolution, Fortymm.Matches.ScoringProposalResolution
+
     timestamps(type: :utc_datetime)
   end
 

@@ -1,0 +1,17 @@
+Scoring Proposal Verification
+<%= if @scoring_proposal.created_by_id == @current_user.id do %>
+  Waiting for your opponent to accept the score
+<% else %>
+  <.score_description scoring_proposal={@scoring_proposal} user={@current_user} />
+  <.form for={} id="accept-form" phx-submit="accept">
+    <.button type="submit">
+      That's right!
+    </.button>
+  </.form>
+
+  <.form for={} id="reject-form" phx-submit="reject">
+    <.button type="submit">
+      No, that's not right
+    </.button>
+  </.form>
+<% end %>

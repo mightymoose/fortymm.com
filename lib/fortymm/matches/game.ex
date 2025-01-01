@@ -2,9 +2,13 @@ defmodule Fortymm.Matches.Game do
   use Ecto.Schema
   import Ecto.Changeset
 
+  alias Fortymm.Matches.ScoringProposal
+
   schema "games" do
     field :status, Ecto.Enum, values: [:pending, :in_progress, :completed, :cancelled, :abandoned]
     belongs_to :match, Fortymm.Matches.Match
+
+    has_many :scoring_proposals, ScoringProposal
 
     timestamps(type: :utc_datetime)
   end

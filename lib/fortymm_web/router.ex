@@ -64,6 +64,9 @@ defmodule FortymmWeb.Router do
 
     live_session :require_authenticated_user,
       on_mount: [{FortymmWeb.UserAuth, :ensure_authenticated}] do
+      live "/matches/:match_id/games/:game_id/scores/:score_id/verification/new",
+           ScoringProposalVerificationLive.New
+
       live "/users/settings", UserSettingsLive, :edit
       live "/users/settings/confirm_email/:token", UserSettingsLive, :confirm_email
       live "/dashboard", DashboardLive.Index
@@ -77,10 +80,6 @@ defmodule FortymmWeb.Router do
     live "/matches/:id", MatchesLive.Show
 
     delete "/users/log_out", UserSessionController, :delete
-
-    get "/matches/:id/games/:game_id/scores/:score_id/verification/new",
-        ScoringProposalVerificationController,
-        :new
 
     live_session :current_user,
       on_mount: [{FortymmWeb.UserAuth, :mount_current_user}] do

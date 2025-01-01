@@ -14,6 +14,13 @@ defmodule Fortymm.Matches do
   alias Fortymm.Accounts.User
   alias Fortymm.Matches.ScoringProposal
   alias Fortymm.Matches.ScoringUpdates
+  alias Fortymm.Matches.ScoringProposalResolution
+
+  def create_scoring_proposal_resolution(attrs \\ %{}) do
+    %ScoringProposalResolution{}
+    |> ScoringProposalResolution.changeset(attrs)
+    |> Repo.insert()
+  end
 
   def create_scoring_proposal(attrs \\ %{}) do
     %ScoringProposal{}
