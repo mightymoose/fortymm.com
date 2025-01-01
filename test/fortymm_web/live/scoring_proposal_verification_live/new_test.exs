@@ -178,9 +178,87 @@ defmodule FortymmWeb.ScoringProposalVerificationLive.NewTest do
              "/matches/#{match.id}/games/#{first_game.id}/scores/new"
   end
 
-  test "redirects to the new game page if there is an accepted scoring proposal and an in progress game"
+  test "redirects to the new game page if there is an accepted scoring proposal and an in progress game",
+       %{conn: conn} do
+    user = user_fixture()
+    challenge = challenge_fixture(%{maximum_number_of_games: 3})
 
-  test "redirects to the match page if the match has ended"
+    {:ok, %{match: match, first_game: first_game}} =
+      Matches.create_match_from_challenge(challenge, user)
+
+    match = Match.load_participants(match)
+    [first_participant, second_participant] = match.match_participants
+
+    {:ok, score} =
+      Matches.create_scoring_proposal(%{
+        game_id: first_game.id,
+        created_by_id: user.id,
+        scores: [
+          %{
+            score: 1,
+            match_participant_id: first_participant.id
+          },
+          %{
+            score: 11,
+            match_participant_id: second_participant.id
+          }
+        ]
+      })
+
+    Matches.create_scoring_proposal_resolution(%{
+      scoring_proposal_id: score.id,
+      created_by_id: user.id,
+      accepted: true
+    })
+
+    {:match_not_completed, new_game} = Matches.complete_game(first_game.id)
+
+    assert conn
+           |> log_in_user(user)
+           |> get(
+             "/matches/#{match.id}/games/#{first_game.id}/scores/#{score.id}/verification/new"
+           )
+           |> redirected_to() ==
+             "/matches/#{match.id}/games/#{new_game.id}/scores/new"
+  end
+
+  test "redirects to the match page if the match has ended", %{conn: conn} do
+    user = user_fixture()
+    challenge = challenge_fixture(%{maximum_number_of_games: 1})
+
+    {:ok, %{match: match, first_game: first_game}} =
+      Matches.create_match_from_challenge(challenge, user)
+
+    match = Match.load_participants(match)
+    [first_participant, second_participant] = match.match_participants
+
+    {:ok, score} =
+      Matches.create_scoring_proposal(%{
+        game_id: first_game.id,
+        created_by_id: user.id,
+        scores: [
+          %{
+            score: 1,
+            match_participant_id: first_participant.id
+          },
+          %{
+            score: 11,
+            match_participant_id: second_participant.id
+          }
+        ]
+      })
+
+    Matches.create_scoring_proposal_resolution(%{
+      scoring_proposal_id: score.id,
+      created_by_id: user.id,
+      accepted: true
+    })
+
+    assert conn
+           |> log_in_user(user)
+           |> get("/matches/#{match.id}/games/1/scores/1/verification/new")
+           |> redirected_to() == "/matches/#{match.id}"
+  end
 
   test "renders the scoring proposal verification form for the user who did not create the scoring proposal",
        %{conn: conn} do
@@ -375,13 +453,222 @@ defmodule FortymmWeb.ScoringProposalVerificationLive.NewTest do
              |> render_submit()
   end
 
-  test "redirects the user who created the scoring proposal to the next game's soring page if the score is accepted"
+  test "redirects the user who created the scoring proposal to the next game's scoring page if the score is accepted",
+       %{conn: conn} do
+    user = user_fixture()
+    other_user = user_fixture()
+    challenge = challenge_fixture(%{created_by_id: other_user.id, maximum_number_of_games: 3})
 
-  test "redirects the user who did not create the scoring proposal to the next game's scoring page if the score is accepted"
+    {:ok, %{match: match, first_game: first_game}} =
+      Matches.create_match_from_challenge(challenge, user)
 
-  test "redirects the user who did not create the scoring proposal to the match page if the score is rejected"
+    match = Match.load_participants(match)
+    [first_participant, second_participant] = match.match_participants
 
-  test "redirects the user who created the scoring proposal to the match page if the score is accepted and the match is over"
+    {:ok, score} =
+      Matches.create_scoring_proposal(%{
+        game_id: first_game.id,
+        created_by_id: user.id,
+        scores: [
+          %{
+            score: 1,
+            match_participant_id: first_participant.id
+          },
+          %{
+            score: 11,
+            match_participant_id: second_participant.id
+          }
+        ]
+      })
 
-  test "redirects the user who did not create the scoring proposal to the match page if the score is accepted and the match is over"
+    {:ok, other_lv, _html} =
+      conn
+      |> log_in_user(other_user)
+      |> live("/matches/#{match.id}/games/#{first_game.id}/scores/#{score.id}/verification/new")
+
+    {:ok, lv, _html} =
+      conn
+      |> log_in_user(user)
+      |> live("/matches/#{match.id}/games/#{first_game.id}/scores/#{score.id}/verification/new")
+
+    other_lv
+    |> form("#accept-form")
+    |> render_submit()
+
+    %{games: games} = Match.load_games(match)
+    next_game = Enum.max_by(games, & &1.id)
+
+    assert_redirect(lv, ~p"/matches/#{match.id}/games/#{next_game.id}/scores/new")
+  end
+
+  test "redirects the user who did not create the scoring proposal to the next game's scoring page if the score is accepted",
+       %{conn: conn} do
+    user = user_fixture()
+    other_user = user_fixture()
+    challenge = challenge_fixture(%{created_by_id: other_user.id, maximum_number_of_games: 3})
+
+    {:ok, %{match: match, first_game: first_game}} =
+      Matches.create_match_from_challenge(challenge, user)
+
+    match = Match.load_participants(match)
+    [first_participant, second_participant] = match.match_participants
+
+    {:ok, score} =
+      Matches.create_scoring_proposal(%{
+        game_id: first_game.id,
+        created_by_id: other_user.id,
+        scores: [
+          %{
+            score: 1,
+            match_participant_id: first_participant.id
+          },
+          %{
+            score: 11,
+            match_participant_id: second_participant.id
+          }
+        ]
+      })
+
+    {:ok, lv, _html} =
+      conn
+      |> log_in_user(user)
+      |> live("/matches/#{match.id}/games/#{first_game.id}/scores/#{score.id}/verification/new")
+
+    lv
+    |> form("#accept-form")
+    |> render_submit()
+
+    %{games: games} = Match.load_games(match)
+    next_game = Enum.max_by(games, & &1.id)
+
+    assert_redirect(lv, ~p"/matches/#{match.id}/games/#{next_game.id}/scores/new")
+  end
+
+  test "redirects the user who did not create the scoring proposal to the match page if the score is rejected",
+       %{conn: conn} do
+    user = user_fixture()
+    other_user = user_fixture()
+    challenge = challenge_fixture(%{created_by_id: other_user.id, maximum_number_of_games: 3})
+
+    {:ok, %{match: match, first_game: first_game}} =
+      Matches.create_match_from_challenge(challenge, user)
+
+    match = Match.load_participants(match)
+    [first_participant, second_participant] = match.match_participants
+
+    {:ok, score} =
+      Matches.create_scoring_proposal(%{
+        game_id: first_game.id,
+        created_by_id: other_user.id,
+        scores: [
+          %{
+            score: 1,
+            match_participant_id: first_participant.id
+          },
+          %{
+            score: 11,
+            match_participant_id: second_participant.id
+          }
+        ]
+      })
+
+    {:ok, lv, _html} =
+      conn
+      |> log_in_user(user)
+      |> live("/matches/#{match.id}/games/#{first_game.id}/scores/#{score.id}/verification/new")
+
+    lv
+    |> form("#reject-form")
+    |> render_submit()
+
+    assert_redirect(lv, ~p"/matches/#{match.id}/games/#{first_game.id}/scores/new")
+  end
+
+  test "redirects the user who created the scoring proposal to the match page if the score is accepted and the match is over",
+       %{conn: conn} do
+    user = user_fixture()
+    other_user = user_fixture()
+    challenge = challenge_fixture(%{created_by_id: other_user.id, maximum_number_of_games: 1})
+
+    {:ok, %{match: match, first_game: first_game}} =
+      Matches.create_match_from_challenge(challenge, user)
+
+    match = Match.load_participants(match)
+    [first_participant, second_participant] = match.match_participants
+
+    {:ok, score} =
+      Matches.create_scoring_proposal(%{
+        game_id: first_game.id,
+        created_by_id: user.id,
+        scores: [
+          %{
+            score: 1,
+            match_participant_id: first_participant.id
+          },
+          %{
+            score: 11,
+            match_participant_id: second_participant.id
+          }
+        ]
+      })
+
+    {:ok, other_lv, _html} =
+      conn
+      |> log_in_user(other_user)
+      |> live("/matches/#{match.id}/games/#{first_game.id}/scores/#{score.id}/verification/new")
+
+    {:ok, lv, _html} =
+      conn
+      |> log_in_user(user)
+      |> live("/matches/#{match.id}/games/#{first_game.id}/scores/#{score.id}/verification/new")
+
+    redirect_result = "/matches/#{match.id}"
+
+    other_lv
+    |> form("#accept-form")
+    |> render_submit()
+
+    assert_redirect(lv, redirect_result)
+  end
+
+  test "redirects the user who did not create the scoring proposal to the match page if the score is accepted and the match is over",
+       %{conn: conn} do
+    user = user_fixture()
+    other_user = user_fixture()
+    challenge = challenge_fixture(%{created_by_id: other_user.id, maximum_number_of_games: 1})
+
+    {:ok, %{match: match, first_game: first_game}} =
+      Matches.create_match_from_challenge(challenge, user)
+
+    match = Match.load_participants(match)
+    [first_participant, second_participant] = match.match_participants
+
+    {:ok, score} =
+      Matches.create_scoring_proposal(%{
+        game_id: first_game.id,
+        created_by_id: other_user.id,
+        scores: [
+          %{
+            score: 1,
+            match_participant_id: first_participant.id
+          },
+          %{
+            score: 11,
+            match_participant_id: second_participant.id
+          }
+        ]
+      })
+
+    {:ok, lv, _html} =
+      conn
+      |> log_in_user(user)
+      |> live("/matches/#{match.id}/games/#{first_game.id}/scores/#{score.id}/verification/new")
+
+    redirect_result = "/matches/#{match.id}"
+
+    assert {:error, {:redirect, %{status: 302, to: ^redirect_result}}} =
+             lv
+             |> form("#accept-form")
+             |> render_submit()
+  end
 end

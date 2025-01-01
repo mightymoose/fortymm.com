@@ -31,18 +31,26 @@ defmodule Fortymm.Matches do
       |> Match.load_scoring()
       |> Match.load_users()
 
-    case Match.winner(match) do
-      nil ->
-        {:ok, new_game} = create_game(%{match_id: match.id, status: :in_progress})
-        {:match_not_completed, new_game}
+    update =
+      case Match.winner(match) do
+        nil ->
+          {:ok, new_game} = create_game(%{match_id: match.id, status: :in_progress})
+          {:match_not_completed, new_game}
 
-      winner ->
-        {:ok, match} = update_match(match, %{status: :completed})
-        {:match_completed, match, winner}
-    end
+        winner ->
+          {:ok, match} = update_match(match, %{status: :completed})
+          {:match_completed, match, winner}
+      end
+
+    broadcast_scoring_proposal_approved(update)
+    update
   end
 
   defp maybe_complete_match(error), do: error
+
+  defp broadcast_scoring_proposal_approved(update) do
+    ScoringUpdates.broadcast_scoring_proposal_approved(update)
+  end
 
   defp get_game!(game_id), do: Repo.get!(Game, game_id)
 
