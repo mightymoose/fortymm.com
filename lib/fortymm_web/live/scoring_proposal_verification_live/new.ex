@@ -5,7 +5,45 @@ defmodule FortymmWeb.ScoringProposalVerificationLive.New do
   alias Fortymm.Matches.Match
 
   def mount(_params, _session, socket) do
+    if connected?(socket) do
+      Matches.subscribe_to_scoring_updates()
+    end
+
     {:ok, socket}
+  end
+
+  def handle_info({:scoring_proposal_approved, details}, socket) do
+    match_id = socket.assigns.match.id
+
+    redirect_to =
+      case details do
+        {:match_not_completed, %{match_id: ^match_id} = next_game} ->
+          ~p"/matches/#{next_game.match_id}/games/#{next_game.id}/scores/new"
+
+        {:match_completed, %{id: ^match_id}, _winner} ->
+          ~p"/matches/#{match_id}"
+      end
+
+    {:noreply, redirect(socket, to: redirect_to)}
+  end
+
+  def handle_info({:scoring_proposal_rejected, game}, socket) do
+    match_id = socket.assigns.match.id
+
+    case game.match_id == match_id do
+      true ->
+        {:noreply,
+         redirect(socket,
+           to: ~p"/matches/#{game.match_id}/games/#{game.id}/scores/new"
+         )}
+
+      _ ->
+        {:noreply, socket}
+    end
+  end
+
+  def handle_info(_msg, socket) do
+    {:noreply, socket}
   end
 
   def handle_event("accept", _params, socket) do
@@ -73,9 +111,30 @@ defmodule FortymmWeb.ScoringProposalVerificationLive.New do
     |> assign_scoring_proposal(score_id)
     |> validate_game_id(game_id)
     |> validate_score_id(score_id)
+    |> ensure_no_newer_game(game_id)
     |> ensure_match_participant()
     |> ensure_latest_scoring_proposal(score_id)
     |> ensure_proposal_not_resolved(score_id)
+  end
+
+  defp ensure_no_newer_game({:noreply, socket}, _game_id), do: {:noreply, socket}
+
+  defp ensure_no_newer_game(socket, game_id) do
+    %{match: match} = socket.assigns
+
+    newest_game =
+      match.games
+      |> Enum.filter(&(&1.status == :in_progress))
+      |> Enum.max_by(& &1.id)
+
+    case game_id == "#{newest_game.id}" do
+      true ->
+        socket
+
+      _ ->
+        {:noreply,
+         redirect(socket, to: ~p"/matches/#{match.id}/games/#{newest_game.id}/scores/new")}
+    end
   end
 
   defp assign_scoring_proposal(socket, score_id) do

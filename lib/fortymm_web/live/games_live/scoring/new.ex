@@ -55,9 +55,22 @@ defmodule FortymmWeb.GamesLive.Scoring.New do
     |> load_match(match_id)
     |> redirect_to_match_without_user()
     |> ensure_game_belongs_to_match(game_id)
+    |> ensure_match_is_not_completed()
     |> redirect_to_match_without_participant()
     |> maybe_redirect_to_score_approval_page()
     |> assign_score_proposal_form(game_id)
+  end
+
+  defp ensure_match_is_not_completed({:noreply, socket}), do: {:noreply, socket}
+
+  defp ensure_match_is_not_completed(socket) do
+    %{match: match} = socket.assigns
+
+    if match.status != :in_progress do
+      {:noreply, redirect(socket, to: ~p"/matches/#{match.id}")}
+    else
+      socket
+    end
   end
 
   defp maybe_redirect_to_score_approval_page({:noreply, socket}), do: {:noreply, socket}
@@ -91,6 +104,8 @@ defmodule FortymmWeb.GamesLive.Scoring.New do
         {:noreply, socket}
     end
   end
+
+  def handle_info(_msg, socket), do: {:noreply, socket}
 
   defp handle_score_created(socket, scoring_proposal) do
     %{match: match} = socket.assigns

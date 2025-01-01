@@ -82,8 +82,39 @@ defmodule FortymmWeb.GamesLive.Scores.NewTest do
                |> live(~p"/matches/#{first_game.match_id}/games/#{first_game.id}/scores/new")
     end
 
-    test "redirects participants to the current game if this one has an accepted scoring proposal"
-    test "redirects to the match page if the match has ended"
+    test "redirects to the match page if the match has ended", %{conn: conn} do
+      challenge = challenge_fixture(%{maximum_number_of_games: 1})
+      user = user_fixture()
+
+      {:ok, %{match: match, first_game: first_game}} =
+        Matches.create_match_from_challenge(challenge, user)
+
+      match = Match.load_participants(match)
+      [first_participant, second_participant] = match.match_participants
+
+      {:ok, score} =
+        Matches.create_scoring_proposal(%{
+          game_id: first_game.id,
+          created_by_id: user.id,
+          scores: [
+            %{match_participant_id: first_participant.id, score: 12},
+            %{match_participant_id: second_participant.id, score: 10}
+          ]
+        })
+
+      Matches.create_scoring_proposal_resolution(%{
+        scoring_proposal_id: score.id,
+        created_by_id: user.id,
+        accepted: true
+      })
+
+      Matches.complete_game(first_game.id)
+
+      assert {:error, {:redirect, %{to: ~p"/matches/#{match.id}", flash: %{}}}} ==
+               conn
+               |> log_in_user(user)
+               |> live(~p"/matches/#{match.id}/games/#{first_game.id}/scores/new")
+    end
 
     test "shows the score proposal form when there is not one for the game", %{conn: conn} do
       challenge = challenge_fixture()
@@ -198,7 +229,5 @@ defmodule FortymmWeb.GamesLive.Scores.NewTest do
 
       assert_redirect(lv, redirect_to)
     end
-
-    test "notifies the user when the score is entered"
   end
 end

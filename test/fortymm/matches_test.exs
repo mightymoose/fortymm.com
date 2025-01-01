@@ -41,6 +41,72 @@ defmodule Fortymm.MatchesTest do
       assert next_game.match_id == match.id
     end
 
+    test "broadcasts the next game when a score is accepted and the match is not over" do
+      challenge = challenge_fixture(%{maximum_number_of_games: 7})
+      user = user_fixture()
+
+      {:ok, %{match: match, first_game: first_game}} =
+        Matches.create_match_from_challenge(challenge, user)
+
+      match = Match.load_participants(match)
+      [first_participant, second_participant] = match.match_participants
+
+      {:ok, scoring_proposal} =
+        Matches.create_scoring_proposal(%{
+          game_id: first_game.id,
+          created_by_id: user.id,
+          scores: [
+            %{match_participant_id: first_participant.id, score: 10},
+            %{match_participant_id: second_participant.id, score: 12}
+          ]
+        })
+
+      Matches.create_scoring_proposal_resolution(%{
+        scoring_proposal_id: scoring_proposal.id,
+        created_by_id: user.id,
+        accepted: true
+      })
+
+      Matches.subscribe_to_scoring_updates()
+
+      assert {:match_not_completed, next_game} = Matches.complete_game(first_game.id)
+
+      assert_receive {:scoring_proposal_approved, {:match_not_completed, ^next_game}}
+    end
+
+    test "broadcasts the match as completed when a score is accepted and the match is over" do
+      challenge = challenge_fixture(%{maximum_number_of_games: 1})
+      user = user_fixture()
+
+      {:ok, %{match: match, first_game: first_game}} =
+        Matches.create_match_from_challenge(challenge, user)
+
+      match = Match.load_participants(match)
+      [first_participant, second_participant] = match.match_participants
+
+      {:ok, scoring_proposal} =
+        Matches.create_scoring_proposal(%{
+          game_id: first_game.id,
+          created_by_id: user.id,
+          scores: [
+            %{match_participant_id: first_participant.id, score: 10},
+            %{match_participant_id: second_participant.id, score: 12}
+          ]
+        })
+
+      Matches.create_scoring_proposal_resolution(%{
+        scoring_proposal_id: scoring_proposal.id,
+        created_by_id: user.id,
+        accepted: true
+      })
+
+      Matches.subscribe_to_scoring_updates()
+
+      assert {:match_completed, match, winner} = Matches.complete_game(first_game.id)
+
+      assert_receive {:scoring_proposal_approved, {:match_completed, ^match, ^winner}}
+    end
+
     test "marks the match as completed if someone has won" do
       challenge = challenge_fixture(%{maximum_number_of_games: 3})
       user = user_fixture()
