@@ -3,6 +3,184 @@ defmodule Fortymm.MatchesTest do
 
   alias Fortymm.Matches
 
+  describe "complete_game" do
+    import Fortymm.MatchesFixtures
+    import Fortymm.AccountsFixtures
+
+    alias Fortymm.Matches.Match
+
+    test "marks the game as completed" do
+      challenge = challenge_fixture(%{maximum_number_of_games: 7})
+      user = user_fixture()
+
+      {:ok, %{match: match, first_game: first_game}} =
+        Matches.create_match_from_challenge(challenge, user)
+
+      match = Match.load_participants(match)
+      [first_participant, second_participant] = match.match_participants
+
+      {:ok, scoring_proposal} =
+        Matches.create_scoring_proposal(%{
+          game_id: first_game.id,
+          created_by_id: user.id,
+          scores: [
+            %{match_participant_id: first_participant.id, score: 10},
+            %{match_participant_id: second_participant.id, score: 12}
+          ]
+        })
+
+      Matches.create_scoring_proposal_resolution(%{
+        scoring_proposal_id: scoring_proposal.id,
+        created_by_id: user.id,
+        accepted: true
+      })
+
+      assert {:match_not_completed, next_game} = Matches.complete_game(first_game.id)
+
+      assert next_game.status == :in_progress
+      assert next_game.match_id == match.id
+    end
+
+    test "marks the match as completed if someone has won" do
+      challenge = challenge_fixture(%{maximum_number_of_games: 3})
+      user = user_fixture()
+
+      {:ok, %{match: match, first_game: first_game}} =
+        Matches.create_match_from_challenge(challenge, user)
+
+      match = Match.load_participants(match)
+      [first_participant, second_participant] = match.match_participants
+
+      {:ok, scoring_proposal} =
+        Matches.create_scoring_proposal(%{
+          game_id: first_game.id,
+          created_by_id: user.id,
+          scores: [
+            %{match_participant_id: first_participant.id, score: 10},
+            %{match_participant_id: second_participant.id, score: 12}
+          ]
+        })
+
+      Matches.create_scoring_proposal_resolution(%{
+        scoring_proposal_id: scoring_proposal.id,
+        created_by_id: user.id,
+        accepted: true
+      })
+
+      assert {:match_not_completed, next_game} = Matches.complete_game(first_game.id)
+
+      {:ok, next_scoring_proposal} =
+        Matches.create_scoring_proposal(%{
+          game_id: next_game.id,
+          created_by_id: user.id,
+          scores: [
+            %{match_participant_id: first_participant.id, score: 10},
+            %{match_participant_id: second_participant.id, score: 12}
+          ]
+        })
+
+      Matches.create_scoring_proposal_resolution(%{
+        scoring_proposal_id: next_scoring_proposal.id,
+        created_by_id: user.id,
+        accepted: true
+      })
+
+      assert {:match_completed, match, winner} = Matches.complete_game(next_game.id)
+
+      assert match.status == :completed
+      assert winner.id == second_participant.id
+    end
+
+    test "does not create a new game if someone has won the match" do
+      challenge = challenge_fixture(%{maximum_number_of_games: 3})
+      user = user_fixture()
+
+      {:ok, %{match: match, first_game: first_game}} =
+        Matches.create_match_from_challenge(challenge, user)
+
+      match = Match.load_participants(match)
+      [first_participant, second_participant] = match.match_participants
+
+      {:ok, scoring_proposal} =
+        Matches.create_scoring_proposal(%{
+          game_id: first_game.id,
+          created_by_id: user.id,
+          scores: [
+            %{match_participant_id: first_participant.id, score: 10},
+            %{match_participant_id: second_participant.id, score: 12}
+          ]
+        })
+
+      Matches.create_scoring_proposal_resolution(%{
+        scoring_proposal_id: scoring_proposal.id,
+        created_by_id: user.id,
+        accepted: true
+      })
+
+      %{games: games} = Match.load_games(match)
+      assert length(games) == 1
+
+      assert {:match_not_completed, next_game} = Matches.complete_game(first_game.id)
+
+      %{games: games} = Match.load_games(match)
+
+      assert length(games) == 2
+
+      {:ok, scoring_proposal} =
+        Matches.create_scoring_proposal(%{
+          game_id: next_game.id,
+          created_by_id: user.id,
+          scores: [
+            %{match_participant_id: first_participant.id, score: 10},
+            %{match_participant_id: second_participant.id, score: 12}
+          ]
+        })
+
+      Matches.create_scoring_proposal_resolution(%{
+        scoring_proposal_id: scoring_proposal.id,
+        created_by_id: user.id,
+        accepted: true
+      })
+
+      assert {:match_completed, match, _winner} = Matches.complete_game(next_game.id)
+
+      %{games: games} = Match.load_games(match)
+      assert length(games) == 2
+    end
+
+    test "does not mark the match as completed if no one has won the match" do
+      challenge = challenge_fixture(%{maximum_number_of_games: 7})
+      user = user_fixture()
+
+      {:ok, %{match: match, first_game: first_game}} =
+        Matches.create_match_from_challenge(challenge, user)
+
+      match = Match.load_participants(match)
+      [first_participant, second_participant] = match.match_participants
+
+      {:ok, scoring_proposal} =
+        Matches.create_scoring_proposal(%{
+          game_id: first_game.id,
+          created_by_id: user.id,
+          scores: [
+            %{match_participant_id: first_participant.id, score: 10},
+            %{match_participant_id: second_participant.id, score: 12}
+          ]
+        })
+
+      Matches.create_scoring_proposal_resolution(%{
+        scoring_proposal_id: scoring_proposal.id,
+        created_by_id: user.id,
+        accepted: true
+      })
+
+      assert {:match_not_completed, _next_game} = Matches.complete_game(first_game.id)
+
+      match = Matches.get_match!(match.id)
+      assert match.status == :in_progress
+    end
+  end
+
   describe "scoring_proposal_resolutions" do
     import Fortymm.MatchesFixtures
 
@@ -164,11 +342,11 @@ defmodule Fortymm.MatchesTest do
       assert {:ok, %{first_game: first_game, match: match, updated_challenge: updated_challenge}} =
                Matches.create_match_from_challenge(challenge, user)
 
-      assert match.status == :pending
+      assert match.status == :in_progress
       assert match.maximum_number_of_games == challenge.maximum_number_of_games
 
       assert first_game.match_id == match.id
-      assert first_game.status == :pending
+      assert first_game.status == :in_progress
 
       assert updated_challenge.match_id == match.id
       assert updated_challenge.accepted_by_id == user.id

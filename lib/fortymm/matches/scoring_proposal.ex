@@ -19,6 +19,10 @@ defmodule Fortymm.Matches.ScoringProposal do
     timestamps(type: :utc_datetime)
   end
 
+  def accepted?(scoring_proposal) do
+    scoring_proposal.scoring_proposal_resolution.accepted
+  end
+
   def load_scores(scoring_proposal) do
     scoring_proposal
     |> Repo.preload(:scores)
