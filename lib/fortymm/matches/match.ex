@@ -19,6 +19,18 @@ defmodule Fortymm.Matches.Match do
     timestamps(type: :utc_datetime)
   end
 
+  def load_scoring(match) do
+    Repo.preload(match,
+      games: [
+        scoring_proposals: [
+          :scoring_proposal_resolution,
+          :created_by,
+          scores: [:match_participant]
+        ]
+      ]
+    )
+  end
+
   def load_games(match) do
     Repo.preload(match, :games)
   end

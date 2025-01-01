@@ -7,12 +7,14 @@ defmodule Fortymm.Matches.ScoringProposal do
   alias Fortymm.Matches.Game
   alias Fortymm.Matches.Score
   alias Fortymm.Repo
+  alias Fortymm.Matches.ScoringProposalResolution
 
   schema "scoring_proposals" do
     belongs_to :game, Game
     belongs_to :created_by, User
 
     has_many :scores, Score
+    has_one :scoring_proposal_resolution, ScoringProposalResolution
 
     timestamps(type: :utc_datetime)
   end
@@ -20,6 +22,11 @@ defmodule Fortymm.Matches.ScoringProposal do
   def load_scores(scoring_proposal) do
     scoring_proposal
     |> Repo.preload(:scores)
+  end
+
+  def load_scoring_proposal_resolution(scoring_proposal) do
+    scoring_proposal
+    |> Repo.preload(:scoring_proposal_resolution)
   end
 
   def for_game(query, game_id) do

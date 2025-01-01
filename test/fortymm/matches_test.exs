@@ -3,6 +3,23 @@ defmodule Fortymm.MatchesTest do
 
   alias Fortymm.Matches
 
+  describe "scoring_proposal_resolutions" do
+    import Fortymm.MatchesFixtures
+
+    test "create_scoring_proposal_resolution/1 with valid data creates a scoring proposal resolution" do
+      attrs = valid_scoring_proposal_resolution_attributes()
+
+      assert {:ok, _scoring_proposal_resolution} =
+               Matches.create_scoring_proposal_resolution(attrs)
+    end
+
+    test "create_scoring_proposal_resolution/1 with invalid data returns error changeset" do
+      attrs = valid_scoring_proposal_resolution_attributes(%{scoring_proposal_id: 0})
+      assert {:error, changeset} = Matches.create_scoring_proposal_resolution(attrs)
+      assert errors_on(changeset).scoring_proposal_id == ["does not exist"]
+    end
+  end
+
   describe "scoring_proposals" do
     import Fortymm.MatchesFixtures
     import Fortymm.AccountsFixtures

@@ -8,6 +8,26 @@ defmodule Fortymm.MatchesFixtures do
   alias Fortymm.Matches
   alias Fortymm.Matches.Match
 
+  def valid_scoring_proposal_resolution_attributes(attrs \\ %{}) do
+    scoring_proposal = scoring_proposal_fixture()
+    user = AccountsFixtures.user_fixture()
+
+    attrs
+    |> Enum.into(%{
+      scoring_proposal_id: scoring_proposal.id,
+      created_by_id: user.id
+    })
+  end
+
+  def scoring_proposal_resolution_fixture(attrs \\ %{}) do
+    {:ok, scoring_proposal_resolution} =
+      attrs
+      |> valid_scoring_proposal_resolution_attributes()
+      |> Matches.create_scoring_proposal_resolution()
+
+    scoring_proposal_resolution
+  end
+
   def valid_score_attributes(attrs \\ %{}) do
     scoring_proposal = scoring_proposal_fixture()
     match_participant = match_participant_fixture()
